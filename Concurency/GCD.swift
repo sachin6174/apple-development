@@ -108,3 +108,74 @@ concurrentQueue.async(flags: .barrier) {
 }
 .barrier flag does not work on serial queues and has no effect on them. Already execute tasks one at a time in FIFO order
 
+
+
+swift
+DispatchQueue.main        // Serial
+// This is the ONLY serial global queue
+// Always serial, runs on main thread, for UI updates
+
+Global Queues
+DispatchQueue.global(qos: .userInteractive)  // Concurrent
+DispatchQueue.global(qos: .userInitiated)    // Concurrent
+DispatchQueue.global(qos: .default)          // Concurrent
+DispatchQueue.global(qos: .utility)          // Concurrent
+DispatchQueue.global(qos: .background)       // Concurrent
+DispatchQueue.global(qos: .unspecified)      // Concurrent
+
+Custom Queues
+swiftDispatchQueue(label: "com.app.queue")                    // Serial
+DispatchQueue(label: "com.app.queue", attributes: .concurrent)  // Concurrent
+
+# Swift QoS (Quality of Service) Reference Table
+
+| QoS Level | Priority | Duration | Thread Priority | Energy Impact | Use Cases | Examples |
+|-----------|----------|----------|-----------------|---------------|-----------|-----------|
+| **`.userInteractive`** | Highest | Instantaneous (0.0s) | Very High | High | UI updates, animations, user interface responsiveness | Button taps, scrolling, drawing, UI animations |
+| **`.userInitiated`** | High | Few seconds or less | High | High | User-requested work they're waiting for | Loading documents, search results, user-triggered actions |
+| **`.default`** | Normal | No specific expectation | Normal | Moderate | General work when no specific QoS needed | Data processing, networking, general tasks |
+| **`.utility`** | Low | Seconds to minutes | Below Normal | Low | Long-running work that can be interrupted | Downloads, imports, maintenance, periodic sync |
+| **`.background`** | Lowest | Minutes to hours | Very Low | Very Low | Work user isn't aware of | Backups, indexing, cleanup, analytics |
+| **`.unspecified`** | System Decides | Undefined | System Determined | System Determined | Legacy support, let system decide | Compatibility, migration code |
+
+## Code Examples
+
+```swift
+// UI Critical - Highest Priority
+DispatchQueue.global(qos: .userInteractive).async {
+    // Update UI elements, handle user interactions
+}
+
+// User Waiting - High Priority  
+DispatchQueue.global(qos: .userInitiated).async {
+    // Load file user just opened
+}
+
+// Normal Work - Default Priority
+DispatchQueue.global(qos: .default).async {
+    // Regular data processing
+}
+
+// Background Tasks - Low Priority
+DispatchQueue.global(qos: .utility).async {
+    // Download updates, sync data
+}
+
+// Maintenance - Lowest Priority
+DispatchQueue.global(qos: .background).async {
+    // Cleanup, backups, analytics
+}
+
+// System Decides - Unspecified
+DispatchQueue.global(qos: .unspecified).async {
+    // Legacy code, let system choose
+}
+```
+
+## Key Guidelines
+
+- **Higher QoS = More CPU/Memory/Energy consumption**
+- **Lower QoS = Better battery life and system performance**
+- **QoS can be promoted**: High-priority work can boost lower-priority work
+- **Choose based on user expectations**: How quickly they expect results
+- **Main queue always runs at userInteractive level**
